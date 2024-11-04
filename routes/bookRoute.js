@@ -5,5 +5,6 @@ const auth = require("../middleware/auth.js");
 const router = express.Router();
 
 router.post("/", auth, multer, bookController.createBook);
+router.get("/", bookController.getBooks);
 
 module.exports = router;

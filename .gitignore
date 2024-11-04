@@ -2,4 +2,7 @@
 # dependencies
 /node_modules
 
+
+
+/images
 .env
