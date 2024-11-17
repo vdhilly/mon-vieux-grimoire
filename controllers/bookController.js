@@ -1,9 +1,11 @@
+const { default: mongoose } = require("mongoose");
 const Book = require("../models/Book");
 
 exports.createBook = (req, res, next) => {
   try {
     const book = JSON.parse(req.body.book);
     book.userId = req.auth.userId;
+    // resize
     book.imageUrl = `${req.protocol}://${req.get("host")}/images/${req.file.filename}`;
 
     const bookModel = new Book({
@@ -33,6 +35,44 @@ exports.getBooks = (req, res, next) => {
       .catch((error) => {
         res.status(400).json({ error });
       });
+  } catch (error) {
+    res.status(500).json({ error });
+  }
+};
+
+exports.getSingleBook = async (req, res, next) => {
+  try {
+    Book.findOne({ _id: req.params.id })
+      .then((book) => res.status(200).json(book))
+      .catch((error) => res.status(404).json({ error }));
+  } catch (error) {
+    res.status(500).json({ error });
+  }
+};
+
+exports.modifyBook = (req, res, next) => {
+  try {
+    // resize
+    const bookObject = req.file
+      ? { ...JSON.parse(req.body.book), imageUrl: `${req.protocol}://${req.get("host")}/images/${req.file.filename}` }
+      : { ...req.body };
+
+    Book.findOne({ _id: req.params.id }).then((book) => {
+      if (book.userId != req.auth.userId) {
+        res.status(403).json({ message: "Requète non-autorisée" });
+      } else {
+        const filename = book.imageUrl.split("/images/")[1];
+
+        req.file &&
+          fs.unlink(`images/${filename}`, (err) => {
+            if (err) console.log(err);
+          });
+
+        Book.updateOne({ _id: req.params.id }, { ...bookObject, _id: req.params.id })
+          .then(() => res.status(200).json({ message: "Objet modifié !" }))
+          .catch((error) => res.status(400).json({ error }));
+      }
+    });
   } catch (error) {
     res.status(500).json({ error });
   }
