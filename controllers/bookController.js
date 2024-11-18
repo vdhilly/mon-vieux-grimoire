@@ -63,13 +63,14 @@ exports.modifyBook = (req, res, next) => {
       } else {
         const filename = book.imageUrl.split("/images/")[1];
 
-        req.file &&
-          fs.unlink(`images/${filename}`, (err) => {
-            if (err) console.log(err);
-          });
-
         Book.updateOne({ _id: req.params.id }, { ...bookObject, _id: req.params.id })
-          .then(() => res.status(200).json({ message: "Objet modifié !" }))
+          .then(() => {
+            req.file &&
+              fs.unlink(`images/${filename}`, (err) => {
+                if (err) console.log(err);
+              });
+            res.status(200).json({ message: "Objet modifié !" });
+          })
           .catch((error) => res.status(400).json({ error }));
       }
     });
@@ -77,3 +78,43 @@ exports.modifyBook = (req, res, next) => {
     res.status(500).json({ error });
   }
 };
+
+exports.updateRatings = (req, res, next) => {
+  try {
+    Book.findOne({ _id: req.params.id })
+      .then((book) => {
+        const userId = req.auth.userId;
+        const { rating } = req.body;
+
+        if (book.ratings.some((rating) => rating.userId === userId)) {
+          return res.status(401).json({ message: "Requête non-autorisée" });
+        }
+
+        book.ratings.push({ userId, grade: rating });
+
+        const grades = book.ratings.map((r) => r.grade);
+        const averageRating = getAverage(grades);
+
+        const updatedBook = {
+          ratings: book.ratings,
+          averageRating,
+          _id: req.params.id,
+        };
+
+        return Book.updateOne({ _id: req.params.id }, updatedBook)
+          .then(() => res.status(200).json(updatedBook))
+          .catch((error) => res.status(400).json({ error }));
+      })
+      .catch((error) => res.status(500).json({ error }));
+  } catch (error) {
+    res.status(500).json({ error });
+  }
+};
+
+function getAverage(grades) {
+  let sum = 0;
+  for (let nb of grades) {
+    sum += nb;
+  }
+  return (sum / grades.length).toFixed(1);
+}
