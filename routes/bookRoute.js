@@ -9,5 +9,6 @@ router.get("/", bookController.getBooks);
 router.get("/:id", bookController.getSingleBook);
 router.put("/:id", auth, multer, bookController.modifyBook);
 router.post("/:id/rating", auth, bookController.updateRatings);
+router.delete("/:id", auth, bookController.deleteBook);
 
 module.exports = router;
