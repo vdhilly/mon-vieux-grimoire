@@ -95,6 +95,8 @@ exports.updateRatings = (req, res, next) => {
         const grades = book.ratings.map((r) => r.grade);
         const averageRating = getAverage(grades);
 
+        book.averageRating = averageRating;
+
         const updatedBook = {
           ratings: book.ratings,
           averageRating,
@@ -102,7 +104,7 @@ exports.updateRatings = (req, res, next) => {
         };
 
         return Book.updateOne({ _id: req.params.id }, updatedBook)
-          .then(() => res.status(200).json(updatedBook))
+          .then(() => res.status(200).json(book))
           .catch((error) => res.status(400).json({ error }));
       })
       .catch((error) => res.status(500).json({ error }));
