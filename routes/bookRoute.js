@@ -6,6 +6,7 @@ const router = express.Router();
 
 router.post("/", auth, multer, multer.resizeImage, bookController.createBook);
 router.get("/", bookController.getBooks);
+router.get("/bestrating", bookController.getBestRating);
 router.get("/:id", bookController.getSingleBook);
 router.put("/:id", auth, multer, multer.resizeImage, bookController.modifyBook);
 router.post("/:id/rating", auth, bookController.updateRatings);
