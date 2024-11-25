@@ -7,7 +7,7 @@ exports.createBook = (req, res, next) => {
     const book = JSON.parse(req.body.book);
     book.userId = req.auth.userId;
     // resize
-    book.imageUrl = `${req.protocol}://${req.get("host")}/images/${req.file.filename}`;
+    book.imageUrl = `${req.protocol}://${req.get("host")}/images/resized_${req.file.filename}`;
 
     const bookModel = new Book({
       ...book,
@@ -55,7 +55,7 @@ exports.modifyBook = (req, res, next) => {
   try {
     // resize
     const bookObject = req.file
-      ? { ...JSON.parse(req.body.book), imageUrl: `${req.protocol}://${req.get("host")}/images/${req.file.filename}` }
+      ? { ...JSON.parse(req.body.book), imageUrl: `${req.protocol}://${req.get("host")}/images/resized_${req.file.filename}` }
       : { ...req.body };
 
     Book.findOne({ _id: req.params.id }).then((book) => {
