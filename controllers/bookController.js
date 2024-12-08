@@ -5,23 +5,28 @@ const fs = require("fs");
 exports.createBook = (req, res, next) => {
   try {
     const book = JSON.parse(req.body.book);
-    book.userId = req.auth.userId;
-    // resize
-    book.imageUrl = `${req.protocol}://${req.get("host")}/images/resized_${req.file.filename}`;
 
-    const bookModel = new Book({
-      ...book,
-    });
+    if (book.userId != req.auth.userId) {
+      res.status(403).json({ message: "Requète non-autorisée" });
+    } else {
+      book.userId = req.auth.userId;
 
-    bookModel
-      .save()
-      .then((response) => {
-        res.status(201).json({ message: "Livre ajouté avec succès !" });
-      })
-      .catch((error) => {
-        console.log(error);
-        res.status(400).json({ error });
+      book.imageUrl = `${req.protocol}://${req.get("host")}/images/resized_${req.file.filename}`;
+
+      const bookModel = new Book({
+        ...book,
       });
+
+      bookModel
+        .save()
+        .then((response) => {
+          res.status(201).json({ message: "Livre ajouté avec succès !" });
+        })
+        .catch((error) => {
+          console.log(error);
+          res.status(400).json({ error });
+        });
+    }
   } catch (error) {
     res.status(500).json({ error });
   }
@@ -53,7 +58,6 @@ exports.getSingleBook = async (req, res, next) => {
 
 exports.modifyBook = (req, res, next) => {
   try {
-    // resize
     const bookObject = req.file
       ? { ...JSON.parse(req.body.book), imageUrl: `${req.protocol}://${req.get("host")}/images/resized_${req.file.filename}` }
       : { ...req.body };
@@ -104,7 +108,7 @@ exports.updateRatings = (req, res, next) => {
           _id: req.params.id,
         };
 
-        return Book.updateOne({ _id: req.params.id }, updatedBook)
+        Book.updateOne({ _id: req.params.id }, updatedBook)
           .then(() => res.status(200).json(book))
           .catch((error) => res.status(400).json({ error }));
       })
